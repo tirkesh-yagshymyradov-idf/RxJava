@@ -1,0 +1,88 @@
+dependencies {
+    implementation lib('com.idf.soul:base-config')
+    implementation lib('com.idf.soul:config-spring')
+    implementation lib('org.springframework:spring-web')
+    implementation lib('org.springframework:spring-context')
+    implementation lib('com.idf.soul:config-micrometer')
+    implementation lib('io.micrometer:micrometer-registry-prometheus')
+    implementation lib('io.projectreactor:reactor-core')
+    implementation lib('com.mm.cfg4j:cfg4j-core')
+    implementation lib('com.idf.soul:config-database')
+    implementation lib('com.idf.soul:mm-datasource')
+    permitUnusedDeclared lib('com.idf.soul:mm-datasource')
+
+    implementation lib('org.jooq:jooq')
+    implementation lib('com.fasterxml.jackson.core:jackson-databind')
+    implementation lib('com.fasterxml.jackson.datatype:jackson-datatype-jsr310')
+    implementation lib('com.fasterxml.jackson.core:jackson-annotations')
+
+    implementation project(':collection:collection-model')
+}
+
+apply from: "${rootDir}/_gradle/jooq.gradle"
+jooq {
+    db(sourceSets.main) {
+        generator {
+            database {
+                includes = 'collector | collector_credit | collector_interaction'
+                customTypes {
+                    customType {
+                        name = 'LocalDateTimeConverter'
+                        type = 'java.time.LocalDateTime'
+                        converter = 'com.mm.platform.jooq.datatype.LocalDateTimeConverter'
+                    }
+                    customType {
+                        name = 'CollectorActivityStatusConverter'
+                        type = 'com.mm.collection.model.CollectorActivityStatus'
+                        converter = 'com.mm.collection.converter.CollectorActivityStatusConverter'
+                    }
+                    customType {
+                        name = 'CollectorCreditStatusConverter'
+                        type = 'com.mm.collection.model.CollectorCreditStatus'
+                        converter = 'com.mm.collection.converter.CollectorCreditStatusConverter'
+                    }
+                    customType {
+                        name = 'CollectorInteractionStatusConverter'
+                        type = 'com.mm.collection.model.CollectorInteractionStatus'
+                        converter = 'com.mm.collection.converter.CollectorInteractionStatusConverter'
+                    }
+                    customType {
+                        name = 'CollectorInteractionTypeConverter'
+                        type = 'com.mm.collection.model.CollectorInteractionType'
+                        converter = 'com.mm.collection.converter.CollectorInteractionTypeConverter'
+                    }
+                }
+                forcedTypes {
+                    forcedType {
+                        name = 'LocalDateTimeConverter'
+                        expression = '.*'
+                        types = 'datetime|timestamp'
+                    }
+                    forcedType {
+                        name = 'CollectorActivityStatusConverter'
+                        expression = '.*collector\\.activity_status'
+                        types = '.*'
+                    }
+                    forcedType {
+                        name = 'CollectorCreditStatusConverter'
+                        expression = '.*collector_credit\\.collector_credit_status'
+                        types = '.*'
+                    }
+                    forcedType {
+                        name = 'CollectorInteractionStatusConverter'
+                        expression = '.*collector_interaction\\.interaction_status'
+                        types = '.*'
+                    }
+                    forcedType {
+                        name = 'CollectorInteractionTypeConverter'
+                        expression = '.*collector_interaction\\.interaction_type'
+                        types = '.*'
+                    }
+                }
+            }
+            target {
+                packageName = 'com.mm.collection.db'
+            }
+        }
+    }
+}
